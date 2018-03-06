@@ -18,10 +18,11 @@ var fabric_client = new Fabric_Client();
 
 // setup the fabric network
 var channel = fabric_client.newChannel('mychannel');
-var peer = fabric_client.newPeer('grpc://localhost:7051');
+var peer = fabric_client.newPeer(process.env.FABRIC_PEER0_ENDPOINT ? process.env.FABRIC_PEER0_ENDPOINT : 'grpc://localhost:7051');
 channel.addPeer(peer);
-var order = fabric_client.newOrderer('grpc://localhost:7050')
+var order = fabric_client.newOrderer(process.env.FABRIC_ORDERER_ENDPOINT ? process.env.FABRIC_ORDERER_ENDPOINT : 'grpc://localhost:7050');
 channel.addOrderer(order);
+console.log('peer="' + peer + '"; order="' + order + '"')
 
 //
 var member_user = null;
@@ -59,13 +60,13 @@ Fabric_Client.newDefaultKeyValueStore({ path: store_path
 	// changeCarOwner chaincode function - requires 2 args , ex: args: ['CAR10', 'Barry'],
 	// must send the proposal to endorsing peers
 	var request = {
-		//targets: let default to the peer assigned to the client
-		chaincodeId: 'fabcar',
-		fcn: '',
-		args: [''],
-		chainId: 'mychannel',
-		txId: tx_id
-	};
+    //targets: let default to the peer assigned to the client
+    chaincodeId: 'fabcar',
+    fcn: 'changeCarOwner', //'createCar',
+    args: ['CAR10', 'Dave'], //['CAR10', 'Chevy', 'Volt', 'Red', 'Nick'],
+    chainId: 'mychannel',
+    txId: tx_id
+  };
 
 	// send the transaction proposal to the peers
 	return channel.sendTransactionProposal(request);
@@ -103,7 +104,7 @@ Fabric_Client.newDefaultKeyValueStore({ path: store_path
 		// get an eventhub once the fabric client has a user assigned. The user
 		// is required bacause the event registration must be signed
 		let event_hub = fabric_client.newEventHub();
-		event_hub.setPeerAddr('grpc://localhost:7053');
+		event_hub.setPeerAddr(process.env.FABRIC_PEER1_ENDPOINT ? process.env.FABRIC_PEER1_ENDPOINT : 'grpc://localhost:7053');
 
 		// using resolve the promise so that result status may be processed
 		// under the then clause rather than having the catch clause process
@@ -159,3 +160,4 @@ Fabric_Client.newDefaultKeyValueStore({ path: store_path
 }).catch((err) => {
 	console.error('Failed to invoke successfully :: ' + err);
 });
+
